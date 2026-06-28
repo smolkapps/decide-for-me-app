@@ -1,0 +1,101 @@
+# DecideForMe — fastlane configuration
+#
+# TESTFLIGHT ONLY. There is deliberately NO `release` lane and NO call to
+# `upload_to_app_store`. Submitting to the App Store is a manual, human-gated
+# step performed in App Store Connect — never automated here.
+#
+# Docs: https://docs.fastlane.tools
+
+default_platform(:ios)
+
+PROJECT      = "DecideForMe.xcodeproj"
+SCHEME       = "DecideForMe"
+BUNDLE_ID    = "org.smolkin.DecideForMe"
+TEAM_ID      = "4R42A425CK"
+
+platform :ios do
+  # --- App Store Connect API authentication -------------------------------
+  # Uses an ASC API key (.p8). Credentials come from environment variables so
+  # nothing secret is committed. In CI these are populated from GitHub secrets.
+  def setup_app_store_connect_api
+    key_id    = ENV["APP_STORE_CONNECT_API_KEY_ID"]
+    issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"]
+    key_path  = ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+
+    UI.user_error!("APP_STORE_CONNECT_API_KEY_ID is not set") if key_id.to_s.empty?
+    UI.user_error!("APP_STORE_CONNECT_ISSUER_ID is not set") if issuer_id.to_s.empty?
+    UI.user_error!("APP_STORE_CONNECT_API_KEY_PATH is not set or missing") if key_path.to_s.empty? || !File.exist?(key_path)
+
+    app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_filepath: key_path,
+      duration: 1200,
+      in_house: false
+    )
+  end
+
+  # --- Dynamic build number ------------------------------------------------
+  # TestFlight rejects duplicate build numbers for a version. Use a timestamp
+  # so every upload is unique without hand-bumping.
+  def dynamic_build_number
+    Time.now.strftime("%Y%m%d%H%M%S")
+  end
+
+  desc "Build a signed, app-store-method IPA (no upload). Useful for CI archive verification."
+  lane :build_ipa do
+    setup_app_store_connect_api
+
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      clean: true,
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "DecideForMe.ipa",
+      export_options: {
+        method: "app-store",
+        teamID: TEAM_ID,
+        signingStyle: "manual",
+        provisioningProfiles: {
+          BUNDLE_ID => "DecideForMe AppStore"
+        }
+      }
+    )
+  end
+
+  desc "Build and upload to TestFlight (beta channel only — never App Store review)."
+  lane :beta do
+    setup_app_store_connect_api
+
+    # Stamp a unique build number for this upload.
+    increment_build_number(
+      xcodeproj: PROJECT,
+      build_number: dynamic_build_number
+    )
+
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      clean: true,
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "DecideForMe.ipa",
+      export_options: {
+        method: "app-store",
+        teamID: TEAM_ID,
+        signingStyle: "manual",
+        provisioningProfiles: {
+          BUNDLE_ID => "DecideForMe AppStore"
+        }
+      }
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true # never auto-submit to external review
+    )
+
+    UI.success("Uploaded to TestFlight. Distribution to App Store review is a separate, manual step.")
+  end
+end

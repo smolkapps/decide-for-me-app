@@ -1,0 +1,4 @@
+app_identifier("org.smolkin.DecideForMe")
+# Authentication uses the App Store Connect API key (see Fastfile), not an
+# Apple ID — so apple_id / itc_team_id are intentionally omitted.
+team_id("4R42A425CK")
