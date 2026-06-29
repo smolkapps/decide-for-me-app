@@ -170,11 +170,14 @@ jobs:
           API_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
         run: |
+          set -o pipefail
           # altool's --upload-app pushes the build to App Store Connect /
           # TestFlight processing. It does NOT submit to App Store review.
           mkdir -p ~/.appstoreconnect/private_keys/
           echo "$API_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+          # Do NOT mask altool's exit code with a trailing `echo` (which always
+          # exits 0). The upload must be the last command so a failed upload
+          # turns the run red.
           xcrun altool --upload-app --type ios \
             --file "$RUNNER_TEMP"/export/*.ipa \
             --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER_ID"
-          echo "Build uploaded to TestFlight processing."
