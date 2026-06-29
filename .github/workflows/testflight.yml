@@ -47,12 +47,12 @@ jobs:
           xcodebuild test \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty || xcodebuild test \
                 -project "$PROJECT" \
                 -scheme "$SCHEME" \
-                -destination 'platform=iOS Simulator,name=iPhone 16' \
+                -destination 'platform=iOS Simulator,name=iPhone 17' \
                 CODE_SIGNING_ALLOWED=NO
 
       - name: Install certificate and provisioning profile
