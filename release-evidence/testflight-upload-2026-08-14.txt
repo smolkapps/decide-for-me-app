@@ -1,0 +1,10 @@
+TestFlight upload accepted by Apple on 2026-08-14.
+
+Version: 1.0.0
+Build: 20260814053433
+Git tag: testflight-20260814-0126
+GitHub Actions run: https://github.com/smolkapps/decide-for-me-app/actions/runs/31772953173
+Result: UPLOAD SUCCEEDED with no errors
+
+This is TestFlight delivery evidence only. It is not evidence of App Store review,
+public release, or RevenueCat Shipaton eligibility.

@@ -10,9 +10,10 @@ release, Devpost submission, or social promotion.
 
 ## Executive result
 
-The app is a credible first-release candidate, but only the local build identity
-and current private/draft state are evidenced. A Release device build succeeds and
-the deterministic unit-test suite passes. The repository contains no evidence of a
+The app is a credible first-release candidate. Version 1.0.0 build 20260814053433 was
+accepted for TestFlight processing on 2026-08-14; this is not a public release. A
+Release device build succeeds and the deterministic unit-test suite passes. The
+repository contains no evidence of a
 previous public App Store release, but absence of evidence is not proof; Michael must
 verify App Store Connect version history before relying on Shipaton eligibility.
 
@@ -45,6 +46,7 @@ store model and privacy disclosures.
 | Data behavior | Source has no backend, account, network, analytics, ads, tracking, or third-party dependency | Current options/history exist only in memory; reassess after RevenueCat integration |
 | External-action gate | No fastlane release lane or `upload_to_app_store`; CI uploads only to TestFlight | App Store review remains manual |
 | Archive-only lane | `fastlane build_ipa` performs no ASC authentication or upload | Fixed in this preflight; local signing assets are still required |
+| TestFlight | Apple accepted version 1.0.0 build 20260814053433 from CI | TestFlight delivered; no App Store review/public release |
 
 ## Needs verification or is blocked
 
