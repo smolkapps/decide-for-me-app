@@ -86,7 +86,9 @@ base64 -i Distribution.p12 | gh secret set BUILD_CERTIFICATE_BASE64 -R smolkapps
 `fastlane/Fastfile` provides:
 
 - `fastlane beta` — build with the `app-store` export method and `upload_to_testflight` (`skip_waiting_for_build_processing: true`, `skip_submission: true`).
-- `fastlane build_ipa` — archive/export only, no upload.
+- `fastlane build_ipa` — archive/export only, no upload and no App Store
+  Connect authentication. It still requires the local distribution certificate
+  and `DecideForMe AppStore` provisioning profile used by the export settings.
 
 There is intentionally **no `release` lane** and **no `upload_to_app_store` call**.
 It authenticates with the ASC API key via these environment variables:

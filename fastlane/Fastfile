@@ -44,8 +44,6 @@ platform :ios do
 
   desc "Build a signed, app-store-method IPA (no upload). Useful for CI archive verification."
   lane :build_ipa do
-    setup_app_store_connect_api
-
     build_app(
       project: PROJECT,
       scheme: SCHEME,
