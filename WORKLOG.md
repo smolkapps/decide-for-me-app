@@ -13,3 +13,7 @@ After that existing gate, compile Release for generic iOS with the established u
 The TestFlight workflow remains disabled and unchanged. Application source, tests, version and iOS17 deployment target are unchanged; no signing, archive, export, Fastlane or upload steps are included. YAML/structural/Bash syntax and trailing-whitespace checks pass. No native build or test was run during preparation, so no execution or runtime acceptance is claimed.
 
 Root verification confirms available iPhone17 simulators under CIUID503 on installed26.2/27.0. The new workflow runs the same xcodebuild unit-test invocation once, without xcpretty or the old formatter/failure fallback: xcpretty is unavailable in the CI tool path. No test assertion or selected-test filter changes. Native Xcode output retains the actual failure status.
+
+## 2026-10-17 — Studio native verification passed
+
+Current-source run38991586307/a02e30a completedSUCCESS on the Studio. All21 existing DeciderTests methods passed on the isolated CI iPhone17/iOS27.0 simulator; no test skip/failure reported. Actual unsigned Release generic-iOS build and all post-steps passed. Local fallback selected Xcode27.1/SDK27.1; this is distinct from the original hosted Xcode26 preference. No app/test/dependency changes, signing or store delivery; original TestFlight workflow remains disabled/unchanged.
