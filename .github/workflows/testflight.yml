@@ -232,16 +232,7 @@ jobs:
             -destination 'generic/platform=iOS' \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
-            | xcpretty || xcodebuild archive \
-                -project "$PROJECT" \
-                -scheme "$SCHEME" \
-                -configuration Release \
-                -archivePath "$RUNNER_TEMP/DecideForMe.xcarchive" \
-                -destination 'generic/platform=iOS' \
-                CODE_SIGN_STYLE=Manual \
-                DEVELOPMENT_TEAM="$TEAM_ID" \
-                PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
 
       - name: Export IPA
         run: |
@@ -249,11 +240,7 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/DecideForMe.xcarchive" \
             -exportOptionsPlist ExportOptions.plist \
-            -exportPath "$RUNNER_TEMP/export" \
-            | xcpretty || xcodebuild -exportArchive \
-                -archivePath "$RUNNER_TEMP/DecideForMe.xcarchive" \
-                -exportOptionsPlist ExportOptions.plist \
-                -exportPath "$RUNNER_TEMP/export"
+            -exportPath "$RUNNER_TEMP/export"
           ls -la "$RUNNER_TEMP/export"
 
       - name: Package the verification archive and provenance
@@ -324,6 +311,27 @@ jobs:
           xcrun altool --upload-app --type ios \
             --file "$RUNNER_TEMP"/export/*.ipa \
             --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER_ID"
+
+      - name: Package existing archive evidence after verification failure
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.verify_only }}
+        working-directory: ${{ runner.temp }}
+        run: |
+          umask 077
+          if [ -d "$RUNNER_TEMP/DecideForMe.xcarchive" ]; then
+            /usr/bin/tar -czf "$RUNNER_TEMP/decide-failed-verification.tar.gz" -C "$RUNNER_TEMP" DecideForMe.xcarchive decide-signing.json decide-signing-trust-verification.log
+            echo '::warning::Retained archive evidence from a failed verification; independent validation is still required.'
+          else
+            echo '::warning::No archive directory exists; no signed archive evidence was retained.'
+          fi
+
+      - name: Retain existing archive evidence after verification failure
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.verify_only }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: decide-for-me-failed-verification-${{ github.run_id }}
+          path: ${{ runner.temp }}/decide-failed-verification.tar.gz
+          if-no-files-found: warn
+          retention-days: 1
 
       - name: Remove only the job-owned installed provisioning profile
         if: always()
