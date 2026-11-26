@@ -262,4 +262,72 @@ final class DeciderTests: XCTestCase {
     func testYesNoPresetLoadsExpectedOptions() {
         XCTAssertEqual(DecisionPreset.yesNo.options, ["Yes", "No"])
     }
+
+    // MARK: - Startup Version Enforcement
+
+    @MainActor
+    func testVersionEnforcerComparesSemVerAndBlocksOutdatedVersions() {
+        let enforcer = VersionEnforcer.shared
+        XCTAssertEqual(enforcer.compareSemVer("1.0.0", "1.0.1"), .orderedAscending)
+        XCTAssertEqual(enforcer.compareSemVer("v1.0.0", "1.0.0"), .orderedSame)
+
+        let hardPolicy = VersionPolicy(
+            minSupportedVersion: "1.1.0",
+            latestVersion: "1.2.0",
+            blockedVersions: nil,
+            maintenanceMode: false,
+            maintenanceTitle: nil,
+            maintenanceMessage: nil,
+            storeUrlIos: "itms-apps://itunes.apple.com/app/id6785593979",
+            storeUrlFallback: nil,
+            hardUpdateTitle: nil,
+            hardUpdateMessage: nil,
+            softUpdateTitle: nil,
+            softUpdateMessage: nil
+        )
+        if case .hardUpdate = enforcer.evaluate(policy: hardPolicy, currentVersion: "1.0.0") {
+            // Expected mandatory update gate
+        } else {
+            XCTFail("Expected hardUpdate for outdated version")
+        }
+
+        let softPolicy = VersionPolicy(
+            minSupportedVersion: "1.0.0",
+            latestVersion: "1.2.0",
+            blockedVersions: nil,
+            maintenanceMode: false,
+            maintenanceTitle: nil,
+            maintenanceMessage: nil,
+            storeUrlIos: "itms-apps://itunes.apple.com/app/id6785593979",
+            storeUrlFallback: nil,
+            hardUpdateTitle: nil,
+            hardUpdateMessage: nil,
+            softUpdateTitle: nil,
+            softUpdateMessage: nil
+        )
+        if case .softUpdate(_, _, _, let version) = enforcer.evaluate(policy: softPolicy, currentVersion: "1.0.0") {
+            XCTAssertEqual(version, "1.2.0")
+        } else {
+            XCTFail("Expected softUpdate when latestVersion is newer")
+        }
+
+        let maintPolicy = VersionPolicy(
+            minSupportedVersion: "1.0.0",
+            latestVersion: "1.0.0",
+            blockedVersions: ["1.0.0"],
+            maintenanceMode: true,
+            maintenanceTitle: "Paused",
+            maintenanceMessage: "Down briefly",
+            storeUrlIos: nil,
+            storeUrlFallback: nil,
+            hardUpdateTitle: nil,
+            hardUpdateMessage: nil,
+            softUpdateTitle: nil,
+            softUpdateMessage: nil
+        )
+        XCTAssertEqual(
+            enforcer.evaluate(policy: maintPolicy, currentVersion: "1.0.0"),
+            .maintenance(title: "Paused", message: "Down briefly")
+        )
+    }
 }
